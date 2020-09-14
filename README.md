@@ -1,1 +1,1 @@
-# MayaCheck
+用于maya模型的检测
