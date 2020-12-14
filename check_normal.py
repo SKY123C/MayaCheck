@@ -1,73 +1,34 @@
-# coding:utf-8
 import maya.cmds as mc
+import maya.OpenMaya as OpenMaya
 import pymel.core as pm
-import maya.OpenMaya as om
-import numpy as np
-import decimal
-from collections import OrderedDict
-import time
-decimal.getcontext().prec = 2
-selected = mc.ls(sl=True,l=True)
-a = time.time()
 
 
-def compute(obj):
-    dict_obj = OrderedDict()
-    point = om.MPointArray()
-    position = []
-    face_iter = om.MItMeshPolygon(pm.PyNode("{}".format(mc.listRelatives(obj[0], c=True, type="mesh")[0])).__apimdagpath__())
-    face_normal = om.MVector()
-    while not face_iter.isDone():
-        face_iter.getPoints(point, om.MSpace.kWorld)
-        face_iter.getNormal(face_normal, om.MSpace.kWorld)
-        for i in range(0, point.length()):
-            position.append([point[i][0], point[i][1], point[i][2]])
-        aver_x_y_z = np.sum(position, axis=0).tolist()
-        x = aver_x_y_z[0]/point.length()
-        y = aver_x_y_z[1]/point.length()
-        z = aver_x_y_z[2]/point.length()
-        dict_obj["{}".format(face_iter.index())] = [[x, y, z], [face_normal[0], face_normal[1], face_normal[2]]]
-        del position[:]
-        face_iter.next()
+def check_normal(model):    # model: mesh,polygon
 
-    return dict_obj
+    if model.lower() == "polygon":
+        obj = mc.ls(sl=1)
+    else:
+        return
 
+    dag = pm.PyNode(obj[0]).__apimdagpath__()
+    it = OpenMaya.MItMeshPolygon(dag)
+    temp = OpenMaya.MFnMesh(dag)
+    ray_source = OpenMaya.MFloatPoint()
+    hit_points = OpenMaya.MFloatPointArray()
+    while not it.isDone():
+        center_point = it.center(OpenMaya.MSpace.kWorld)
 
-def check(parm):
-    results = []
-    target_mesh = om.MFnMesh(pm.PyNode("{}".format(mc.listRelatives(selected[0], c=True, type="mesh")[0])).__apimdagpath__())
-    for i, data in parm.iteritems():
+        face_normal = OpenMaya.MVector()
+        it.getNormal(face_normal, OpenMaya.MSpace.kWorld)
+        d_normal = face_normal*0.1
+        temp_point = center_point + d_normal
+        ray_source.setCast(temp_point)
+        b_intersection = temp.allIntersections(ray_source, OpenMaya.MFloatVector(face_normal),
+                                              None, None, False, OpenMaya.MSpace.kWorld, 999, False, None, False,
+                                              hit_points, None, None, None, None, None)
+        if b_intersection and hit_points.length() % 2 != 0:
+            print it.index()
 
-        x = data[0][0]+0.1
-        y = ((data[1][1]*0.1)/data[1][0])+data[0][1]
-        z = ((data[1][2]*0.01)/data[1][0])+data[0][2]
+        it.next()
 
-        x_vector = 0.1
-        y_vector = y - data[0][1]
-        z_vector = z - data[0][2]
-
-        if (x_vector*data[1][0]+y_vector*data[1][1]+z_vector*data[1][2]) >= 0:
-
-            pass
-
-        else:
-
-            x = data[0][0]-0.1
-
-            y = ((data[1][1]*-0.1)/data[1][0])+data[0][1]
-
-            z = ((data[1][2]*-0.1)/data[1][0])+data[0][2]
-
-        temp_point = om.MFloatPoint(x, y, z)
-        direction_normal = om.MFloatVector(data[1][0], data[1][1], data[1][2])
-        hit_faces = om.MIntArray()
-        hit_points = om.MFloatPointArray()
-        target_mesh.allIntersections(temp_point, direction_normal, None, None, True, om.MSpace.kWorld, 999, False, None, False, hit_points, None, hit_faces, None, None, None)
-
-        if decimal.Decimal(hit_points.length())/decimal.Decimal(2) != 0:
-            results.append(i)
-    return results
-print check(compute(selected))
-b = time.time()
-print b-a
-
+check_normal("polygon")
