@@ -1,4 +1,5 @@
 # coding:utf-8
+from __future__ import division
 import maya.cmds as mc
 import maya.OpenMaya as om
 import time
@@ -37,10 +38,7 @@ def compute(turn=True):
                 temp_point = om.MFloatPoint(point[i][0], point[i][1], point[i][2])
                 direction_normal = om.MFloatVector(face_normal[0], face_normal[1], face_normal[2])
                 hit = source_mesh.allIntersections(temp_point, direction_normal, None, None, False, om.MSpace.kWorld, 999, True, None, True, hit_points, None, None, None, None, None)
-                if face_iter.index() == 0:
-                    print round(hit_points[0][0],6),round(point[i][0],6),round(hit_points[1][0],6)
-                    print round(hit_points[0][1],6),round(point[i][1],6),round(hit_points[1][1],6)
-                    print round(hit_points[0][2],6),round(point[i][2],6),round(hit_points[1][2],6)
+
                 if hit and i == point.length()-1 and (round(hit_points[0][0], 6) >= round(point[i][0], 6) >= round(hit_points[1][0], 6) or round(hit_points[0][0], 6) <= round(point[i][0], 6) <= round(hit_points[1][0], 6)) and (round(hit_points[0][1], 6) >= round(point[i][1], 6) >= round(hit_points[1][1], 6) or round(hit_points[0][1], 6) <= round(point[i][1], 6) <= round(hit_points[1][1], 6)) and (round(hit_points[0][2], 6) >= round(point[i][2], 6) >= round(hit_points[1][2], 6) or round(hit_points[0][2], 6) <= round(point[i][2], 6) <= round(hit_points[1][2], 6)):
                     mc.select("{}.f[{}]".format(target.fullPathName(), face_iter.index()), add=True)
                 elif hit and (round(hit_points[0][0], 6) >= round(point[i][0], 6) >= round(hit_points[1][0], 6) or round(hit_points[0][0], 6) <= round(point[i][0], 6) <= round(hit_points[1][0], 6)) and (round(hit_points[0][1], 6) >= round(point[i][1], 6) >= round(hit_points[1][1], 6) or round(hit_points[0][1], 6) <= round(point[i][1], 6) <= round(hit_points[1][1], 6)) and (round(hit_points[0][2], 6) >= round(point[i][2], 6) >= round(hit_points[1][2], 6) or round(hit_points[0][2], 6) <= round(point[i][2], 6) <= round(hit_points[1][2], 6)):
